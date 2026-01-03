@@ -14,7 +14,7 @@ export default function Signup() {
     e.preventDefault()
     const { error } = await supabase.auth.signUp({ email, password })
     if (error) setError(error.message)
-    else router.push('/dashboard')
+    else router.push('/login?confirmed=pending')
   }
 
   return (

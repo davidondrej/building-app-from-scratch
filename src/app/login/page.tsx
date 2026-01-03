@@ -1,6 +1,6 @@
 'use client'
 import { supabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
 
@@ -9,6 +9,8 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const pending = searchParams.get('confirmed') === 'pending'
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -24,6 +26,7 @@ export default function Login() {
           <h1 className="text-4xl font-black uppercase italic">Login</h1>
         </div>
 
+        {pending && <p className="text-green-700 font-bold text-sm mb-4 p-2 border-2 border-green-700 bg-green-50">Check your email to confirm your account.</p>}
         {error && <p className="text-red-600 font-bold text-sm mb-4 p-2 border-2 border-red-600 bg-red-50">{error}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-6">
