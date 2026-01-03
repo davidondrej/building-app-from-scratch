@@ -1,36 +1,12 @@
-import { supabase } from '@/lib/supabase'
 import { NextRequest, NextResponse } from 'next/server'
+import { store } from '@/lib/store'
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
+  const link = store.links.find(l => l.slug === slug)
 
-  // Find the link
-  const { data: link } = await supabase
-    .from('links')
-    .select('id, original_url')
-    .eq('slug', slug)
-    .single()
+  if (!link) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  if (!link) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  }
-
-  // Get tracking params
-  const source = request.nextUrl.searchParams.get('src')
-  const referrer = request.headers.get('referer')
-  const country = request.headers.get('cf-ipcountry') || request.headers.get('x-vercel-ip-country')
-
-  // Log the click
-  await supabase.from('clicks').insert({
-    link_id: link.id,
-    source_tag: source,
-    referrer,
-    country
-  })
-
-  // Redirect
+  store.clicks.push({ link_id: link.id, source_tag: request.nextUrl.searchParams.get('src') })
   return NextResponse.redirect(link.original_url)
 }
