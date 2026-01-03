@@ -33,3 +33,12 @@ create policy "Users can view clicks on own links" on clicks
   for select using (
     link_id in (select id from links where user_id = auth.uid())
   );
+
+-- Function to get click stats grouped by source
+create or replace function get_click_stats(link_id_param uuid)
+returns table(source_tag text, count bigint) as $$
+  select coalesce(source_tag, 'direct') as source_tag, count(*)
+  from clicks
+  where link_id = link_id_param
+  group by source_tag
+$$ language sql security definer;
