@@ -1,16 +1,20 @@
 'use client'
+import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
 
 export default function Signup() {
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
   const router = useRouter()
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    localStorage.setItem('user', email)
-    router.push('/dashboard')
+    const { error } = await supabase.auth.signUp({ email, password })
+    if (error) setError(error.message)
+    else router.push('/dashboard')
   }
 
   return (
@@ -20,31 +24,35 @@ export default function Signup() {
           <h1 className="text-4xl font-black uppercase italic">Sign Up</h1>
         </div>
 
+        {error && <p className="text-red-600 font-bold text-sm mb-4 p-2 border-2 border-red-600 bg-red-50">{error}</p>}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-bold uppercase mb-2">Email Address</label>
-            <input 
-              type="email" 
-              placeholder="YOU@EXAMPLE.COM" 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-              className="w-full p-4 border-2 border-black bg-gray-50 focus:bg-white focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all font-mono" 
-              required 
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-bold uppercase mb-2">Password</label>
-            <input 
-              type="password" 
-              placeholder="CREATE PASSWORD" 
-              className="w-full p-4 border-2 border-black bg-gray-50 focus:bg-white focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all font-mono" 
-              required 
+            <input
+              type="email"
+              placeholder="YOU@EXAMPLE.COM"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="w-full p-4 border-2 border-black bg-gray-50 focus:bg-white focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all font-mono"
+              required
             />
           </div>
 
-          <button 
-            type="submit" 
+          <div>
+            <label className="block text-sm font-bold uppercase mb-2">Password</label>
+            <input
+              type="password"
+              placeholder="CREATE PASSWORD"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-full p-4 border-2 border-black bg-gray-50 focus:bg-white focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] outline-none transition-all font-mono"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
             className="w-full py-4 px-4 bg-[#5CE1E6] text-black font-black uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-0.5 hover:translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
           >
             Create Account
