@@ -29,10 +29,16 @@ export default function Dashboard() {
     const { data } = await supabase.from('links').select('*').eq('user_id', userId).order('created_at', { ascending: false })
     if (data) {
       setLinks(data)
+      const ids = data.map(l => l.id)
+      const { data: allClicks } = await supabase.from('clicks').select('link_id, source_tag').in('link_id', ids)
       const clickData: Record<string, ClickStat[]> = {}
-      for (const link of data) {
-        const { data: stats } = await supabase.rpc('get_click_stats', { link_id_param: link.id })
-        clickData[link.id] = stats || []
+      for (const click of allClicks || []) {
+        const key = click.link_id
+        const src = click.source_tag || 'direct'
+        clickData[key] = clickData[key] || []
+        const existing = clickData[key].find(c => c.source_tag === src)
+        if (existing) existing.count++
+        else clickData[key].push({ source_tag: src, count: 1 })
       }
       setClicks(clickData)
     }
@@ -132,12 +138,19 @@ export default function Dashboard() {
                     </div>
                     <p className="text-sm font-mono truncate max-w-md text-gray-600 border-b border-black inline-block">{link.original_url}</p>
                     {clicks[link.id]?.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {clicks[link.id].map(c => (
-                          <span key={c.source_tag} className="text-xs font-bold px-2 py-1 border-2 border-black bg-gray-100">
-                            {c.source_tag}: {c.count}
-                          </span>
-                        ))}
+                      <div className="mt-3 space-y-1">
+                        {clicks[link.id].map(c => {
+                          const max = Math.max(...clicks[link.id].map(x => x.count))
+                          return (
+                            <div key={c.source_tag} className="flex items-center gap-2">
+                              <span className="text-xs font-bold w-16 truncate">{c.source_tag}</span>
+                              <div className="flex-1 h-4 bg-gray-200 border border-black">
+                                <div className="h-full bg-[#5CE1E6]" style={{ width: `${(c.count / max) * 100}%` }} />
+                              </div>
+                              <span className="text-xs font-mono w-8">{c.count}</span>
+                            </div>
+                          )
+                        })}
                       </div>
                     )}
                   </div>
